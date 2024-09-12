@@ -1,0 +1,332 @@
+<file Project.py>
+#removed imports
+
+class Project(ISerializable):
+    """
+    Basically, the project class is just a container for a list of tasks, and provide context for those tasks
+    Currently only focused on any type software development using git
+    """    
+    def __init__(self, name: str):
+        self.name = name
+        self.tasks = []
+        self.description = ""
+        self.status = ""
+        self.git_URL = ""
+        self.local_git_path = ""
+        self.project_data = {} # api keys, git URL?
+
+    def add_task(self, task: Task):
+        self.tasks.append(task)
+
+    _exclude_from_properties = ['tasks']
+    _exclude_from_usd = ['task_graph_root']
+    _exclude_from_json = ['task_graph_root']     
+</file>
+
+<file Task.py>
+#removed imports
+class TaskPhase(IntEnum):
+    #... removed to reduce context
+
+phase_prompt_tags = #... removed to reduce context
+
+class TaskContext:
+    """
+    The "TASK" super class is the base class for automating any software task using LLMs
+    It is composed of: tags, session, task graph
+    tags are the searchable meta data used to store and retreive this Task from a database
+    The session is the ongoing log with the LLM to construct the graph
+    The task graph is a node graph of aggregate tasks to complete, more llm sessions and/or more functional/application nodes
+    """    
+    def __init__(self, project, task: 'Task'):
+        self.project = project
+        self.task: 'Task' = task
+        self.node_stack: List[TaskNode] = []
+        self.variable_stack: Dict[str, Any] = {} # node scoped varaible stack
+
+    def get_current_node(self) -> TaskNode:
+        return self.node_stack[-1] if self.node_stack else None
+
+    def set_variable(self, name: str, value: Any):
+        current_node = self.get_current_node()
+        if current_node:
+            if name not in self.variable_stack:
+                current_node.scoped_variables.append(name)
+        self.variable_stack[name] = value
+
+    def get_variable(self, name: str) -> Any:
+        if name in self.variable_stack:
+            return self.variable_stack[name]
+        raise KeyError(f"Variable '{name}' not found")
+
+    def clear_node_variables(self, node: TaskNode):
+        for var_name in node.scoped_variables:
+            if var_name in self.variable_stack:
+                del self.variable_stack[var_name]
+        node.scoped_variables.clear()     
+
+class Task(ISerializable):
+    """
+    The "TASK" super class is the base class for automating any software task using LLMs
+    It is composed of: tags, session, task graph
+    tags are the searchable meta data used to store and retreive this Task from a database
+    The session is the ongoing log with the LLM to construct the graph
+    The task graph is a node graph of aggregate tasks to complete, more llm sessions and/or more functional/application nodes
+    """    
+    def __init__(self, name: str = "NO NAME", project = None):
+        self.name: str = name
+        self.project = project
+        self.task_phase: TaskPhase = TaskPhase.Spec
+        self.branch_name: str = "DEFAULT_BRANCH_NAME"
+        self.commit_id: str = "INVALID_COMMIT_ID"
+        self.tags: List[str] = []
+        self.description: str = ""
+        self.content_version: str = "" #for when the graph data changes
+        self.graph_version: str = "" #for when the code changes
+        self.task_graph_root: TaskNode = None
+        self.LLM_interface: TaskNode_LLM = TaskNode_LLM()
+        self.LLM_interface.name = f"{self.name}_tasksession"
+        self.LLM_interface.session_callback = self.session_callback
+
+        self.initialize_phase()
+                
+    _exclude_from_properties = ['project', 'task_graph_root', 'commit_id', 'LLM_interface']
+    _readonly_properties = ['name','task_phase', 'branch_name', 'content_version', 'graph_version']    
+    _exclude_from_usd = ['project']
+    _exclude_from_json = ['project']
+
+    def get_display_name(self):
+        return f"{self.name}[{self.task_phase}]"
+
+    #... removed functions removed to reduce context
+    
+    def execute(self):
+        task_context = TaskContext(self.project, self)
+        
+        def traverse_and_execute(node: TaskNode):
+            # Ensure scoped_variables is empty
+            node.scoped_variables.clear() 
+            # Push the current node onto the stack
+            task_context.node_stack.append(node)
+            # Execute the node
+            result = node.execute(task_context)
+            # Execute child nodes if any
+            if hasattr(node, 'children'):
+                for child in node.children:
+                    traverse_and_execute(child)
+            # Clear variables owned by this node
+            task_context.clear_node_variables(node)
+            # Pop the current node from the stack
+            task_context.node_stack.pop()
+            return result
+        
+        # Start traversal from the root node
+        if self.task_graph_root:
+            return traverse_and_execute(self.task_graph_root)
+        else:
+            raise ValueError("Task graph root is not set")
+</file>
+
+<file TaskNode.py>
+#removed imports
+class TaskNodeState(str,Enum):
+    Queued = 0
+    Ready = 1
+    Executing = 2
+    Complete = 3
+    Error = 4
+
+#============================================================================
+class TaskNode(ABC, ISerializable):
+    """
+    TaskNode's are the aggregated tasks executed when completing a task
+    Conceptually these will be collection point for context data to help LLMs break a task down further
+    At the lowest level it should be LLMs doing the work, being asked to write code, etc
+    'children' : aggregated subtasks, or execution task nodes
+    'inputs' and 'outputs' should reflect the data required and produced by the node, 
+        -used to validate the graph 
+        -allow for context reduction, a future feature to reference subtask trees, in those cases only the top level input/outputs are needed
+        -allow LLM nodes to use these for format specifiers in prompts
+    """
+    def __init__(self):
+        self.type: str = self.__class__.__name__
+        self.name: str = ""
+        self.description: str = ""
+        self.version: str = ""
+        self.state: TaskNodeState = TaskNodeState.Queued
+        # tags will be used for search, to be implemented
+        self.tags: List[str] = []        
+
+        self.children: List[TaskNode] = []
+        # scoped_variables is for the task graph execution track variable scope
+        self.scoped_variables: List[str] = []
+        # inputs specifiy the data expected by the node, to be specified during graph construction
+        self.inputs: List[str] = []
+        # inputs specifiy the data produced by the node, to be specified during graph construction
+        self.output: List[str] = []
+    
+    def add_child(self, child: 'TaskNode'): 
+        self.children.append(child)
+
+    @abstractmethod
+    def execute(self, task_context : TaskContext):
+        pass
+
+    _exclude_from_properties = ['children', 'scoped_variables'],
+    _readonly_properties = ['name', 'type','inputs', 'output']
+    _exclude_from_usd = ['type', 'scoped_variables']
+    _exclude_from_json = ['type', 'scoped_variables']
+
+#============================================================================
+class TaskNode_Container(TaskNode):
+    """
+    A simple container node
+    """
+    def __init__(self):
+        super().__init__()
+
+    def execute(self, task_context : TaskContext):
+        pass
+
+#============================================================================
+class TaskNode_ProjectFile(TaskNode):
+    """
+    Read a file from the project manifest into a global variable
+    """
+    def __init__(self):
+        super().__init__()
+        self.variable_name = ""
+        self.file_name = ""
+        #self.start_offset = ""
+        #self.end_offset = ""
+
+    def execute(self, task_context : TaskContext):
+        # TODO
+        pass
+
+#============================================================================
+class TaskNode_Python(TaskNode):
+    """
+    TaskNode are the aggregated tasks executed when completing a task
+    Predominately these will be collection point for LLMs used to break a task down further
+    At the lowest level it should be LLMs doing the work, being asked to write code
+    The leaf ouput will ultimately be anything generated/modified files
+
+    task_context will contain additional data needed composed by other node used to execute the task
+    like the target LLM, a python function to run, or the command line tool to run
+    """
+    def __init__(self):
+        super().__init__()
+        self.python_code = ""
+
+    def execute(self, task_context : TaskContext):
+        self.state = TaskNodeState.Executing
+        eval(self.python_code)
+        self.state = TaskNodeState.Complete  
+
+#============================================================================
+class TaskNode_RequestUserAssistance(TaskNode):
+    """
+    For tasks that the LLM models is struggling with or otherwise cannot handle, request user assistance
+    The node should only contain user created nodes, or the user can manually do the task and mark it complete
+    """    
+    def __init__(self):
+        super().__init__()
+
+    def execute(self, task_context : TaskContext):
+        # TODO
+        #pop up a dialog asking for the information
+        #This may take the form of an LLM session and or a user making manual modifications to the task graph
+        pass
+
+#============================================================================
+class TaskNode_SearchProjectData(TaskNode_Python):
+    def __init__(self):
+        super().__init__()
+        # python code used to search
+        self.python_code = ""
+
+#============================================================================
+</file>
+
+<file TaskNode_LLM.py>
+#removed imports
+class LLM_Interface(str,Enum):
+    OpenAI = 0
+    Anthropic = 1
+    OogaBooga = 2  # for deepseek coder
+
+class LLM_Model(Enum):
+    Claude3_5_Sonnet = 0
+    Chat_GPT_3_5_Turbo = 1
+    Chat_GPT_4_o = 2
+    DeepSeek = 3
+
+model_names = {
+    LLM_Model.Claude3_5_Sonnet: "claude-3-5-sonnet-20240620",
+    LLM_Model.Chat_GPT_3_5_Turbo: "gpt-3.5-turbo",
+    LLM_Model.Chat_GPT_4_o: "gpt-4o-2024-08-06",
+    LLM_Model.DeepSeek: "",
+}
+
+def Get_Model_Interface(model: LLM_Model):
+    if model.name.startswith("Claude"):
+        return LLM_Interface.Anthropic
+    if model.name.startswith("Chat_GPT"):
+        return LLM_Interface.OpenAI
+
+class LLMError(Exception):
+    def __init__(self, message: str, details: Optional[str] = None):
+        self.message = message
+        self.details = details
+        super().__init__(self.message)
+
+class StreamingData:
+    def __init__(self):
+        self.full_buffer = ""
+        self.streaming_to_file = False
+        self.current_file = None
+        self.current_file_content = ""
+
+class TaskNode_LLM(TaskNode):
+    supported_embedded_types = ['file', 'diff','task_graph']
+    session_callback : Callable = None
+
+    class _TaskNodeLLMQObject(QObject):
+        streaming_update = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self._qobject = self._TaskNodeLLMQObject()
+        self._stop_response = False
+        self._stream_complete = True
+        self._response_session_entries: List[SessionEntry] = []
+        self._full_response = ""
+        self._lock = asyncio.Lock()
+        self._running_task = None
+
+        self.llm_model: LLM_Model = LLM_Model.Claude3_5_Sonnet
+        self.llm_model_name_override = ""
+        self.additional_prompt_tags: List[str] = [] # additional tags to be added to the prompt
+        self.prompt: str = ""
+        self.session: List[SessionEntry] = []
+        self.response_variable_stack_name: str = "most_recent_llm_response"
+        self.streaming: bool = True
+        self.state: TaskNodeState = TaskNodeState.Queued
+        self.error_message: Optional[str] = None
+        self.timeout: float = 60.0
+
+    #... removed functions removed to reduce context
+    
+class TaskNode_Disaggregator(TaskNode_LLM):
+    """
+    Used when the task is either too large or cannot be well defined at the time of graph creation
+    A sub graph will be generated when execute is called
+    """
+    def __init__(self):
+        TaskNode_LLM.__init__()
+
+    def execute(self, task_context : TaskContext):
+        # TODO build graph then execute it
+        pass         
+</file>

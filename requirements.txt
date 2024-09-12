@@ -1,0 +1,7 @@
+pip install GitPython
+pip install PyQt5
+pip install aiohttp
+pip install usd-core
+
+
+pip install pyqtspinner

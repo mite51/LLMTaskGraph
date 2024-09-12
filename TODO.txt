@@ -1,0 +1,266 @@
+PINNED
+-Update Framework.txt
+
+I would like to create a very simple calculator app using pyqt. It should support only basic arithmetic operations but should use decimals.
+don't ask me any more questions, just do what you think is appropriate 
+
+
+P0
+x create projects/tasks/execute
+x streaming inputs
+x have session create task graphs
+x parse file out from response
+x add inputs/outputs names for stack variables used 
+x add python pip requirements
+x ui for embedded files
+/ view model setup for project/task, so generated task graphs can get updated
+    *just added a refesh function to update task_graphs
+x save projects/task/session to disk
+x rename aggregator to disaggregator    
+x add prompt summary
+x better way to deal with LLM file output
+    -filenames get added to output
+    -inputs can reference other nodes output
+- keywords for important info stored in variable stack
+    -list all keywords in documentation/prompt
+    -list project files/assets
+    -list project classes and global functions
+        "summarize in the briefest possibly way that would helpful to an LLM meant to location code functionality"
+    -list class member functions and variables
+    -prompts
+-add some project startup tasks, build manifest, documentation    
+-replace task graph json with just ptyhon code to define graph :/
+-think about how the task can clarify things like where to find the code to edit, what code might be involved in a bug
+-add "session" for all node types, so output can be seen
+-Properties window support larger multi-line text edit boxes
+    -maybe if the text is long and or has eol chars?
+-Project session, ask it to start new tasks.. create manifests, build documention, etc    
+-ui for embedded diffs -> apply button?
+
+p1 
+xreadonly properties list in ISerializable
+-settings. to store API keys
+xcreate an better LLM abstraction interface to clean up LLM node and Task session
+-API metrics.. cost
+-support for other providers Mistral, Grog, Ollama, Nvidia?
+-how to debug/disagnose code bugs
+    *text only debug interfaces for major languages.. how does vscode do it?
+        !experiment, try to write a python interface for debugging applications? breakpoints, watch, screenshot, terminal output
+    *output channel for debug print statements?
+    *when coding, LLM should implement some kind of API to drive an app
+-create a code commenting prompt.. basically to elaborate on what the code is doing and why    
+-experiment with providing code with line numbers.. to see if that helps with diffs
+-git clone to handle password
+[refactor]
+-Change task nodes 'children' to have a list of possible branches.. 
+    -Each option would have a selection criteria and a node graph to use when selected
+    -Allows branching
+    -The thought is to be able to make the TaskPhase data driven
+        *[PHASE_COMPLETE] is response would be the selection criteria to 
+[refactor2]        
+-TaskState could just be replaced with a custom task graph.
+-Allow Nodes to have their own completion criteria, maybe its selecting a child or just finish and proceed to the next sibling
+-Create evaluation function to determine the task is actually done, review the work, and ask questions about how it could fail
+-Some way a graph can locate code for a task in an efficient way.. for example, to implement a html server feature.. does a server already exist, if so where is the code?
+P2
+-use a cheaper llm to run "context reduction" if the context size it getting too big
+-add ollama support https://github.com/ollama/ollama/blob/main/docs/api.md
+-add deepseek support https://platform.deepseek.com
+-Have the Task execute state be more graph like and be data driven
+-How was claude building functioning task graphs when there was no framework information provided in prompts?
+
+----------------------
+-debugging or otherwise fixing an code needs a way to test
+    !first identify problem code then iterate on fixed, recording findings
+    -debugger?
+    -unit tests
+    -function interface for LLM, steam input/output
+-bisect old builds to find WHEN an issue first appeared.
+-the project file should commit itself to git into its own branch, so it has its own history
+-undo/redo system for ui
+
+----------------------
+UI
+-create new project
+    +single dialog to accept basic information
+    +sync git
+    +setup env
+    +build context documentation as first task?
+-create new task
+    +branch?
+    
+-execute task
+    -update task state
+    -task review/refine/session fixes
+
+-task store
+    -task storage        
+
+-decision points, as a task it being build, try to add topics that had potential alternative implemtations.. list them, choose one (if not already chose), provide reasoning 
+
+
+----------------------
+
+----------------------
+
+https://bigcode-bench.github.io/
+https://www.swebench.com/
+
+ClaudeDev
+https://www.youtube.com/watch?v=UNsQHosbIoE
+https://github.com/saoudrizwan/claude-dev
+SWE-Agent : debugs
+https://www.youtube.com/watch?v=PyBIrSOlRXY
+Genie
+https://youtu.be/zKwXTZhfH1U?si=pa1t1haxIoW2oLVe
+deep seek coder
+https://www.youtube.com/watch?v=xcN3Lw0zbp4
+OpenHands
+https://www.youtube.com/watch?v=Q3DyeIV96tY
+Llama coder
+https://www.youtube.com/watch?v=86parjHvWxU
+Relay.app
+https://www.youtube.com/watch?v=MCQ_9pFbz78
+Agent Zero
+https://www.youtube.com/watch?v=70ZKqLXOOf8
+Taipy
+https://www.youtube.com/watch?v=wZ23HP_UN34
+
+E2B AI Artifacts
+https://www.youtube.com/watch?v=R9Qsl4Xc8n0
+AgentK
+https://www.youtube.com/watch?v=POGsJd2TQhk
+
+
+------------------------------------ tokens
+For estimating token count locally, there isn't an official Anthropic tokenizer available publicly. However, you can use approximation methods:
+
+GPT-2 Tokenizer:
+While not exact, the GPT-2 tokenizer can give a reasonable estimate. You can use the transformers library from Hugging Face:
+
+from transformers import GPT2Tokenizer
+python:
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    text = "Your text here"
+    tokens = tokenizer.encode(text)
+    token_count = len(tokens)
+
+
+Character-based Estimation:
+A very rough estimate can be made based on characters. On average, one token is about 4 characters in English. So you could use:
+python:
+    def estimate_tokens(text):
+        return len(text) // 4
+
+Keep in mind that these local estimation methods are not exact and may differ from Anthropic's actual tokenization. The most accurate way to get token counts is through the API response.
+
+code for both open ai and anthropic:
+    usage = response['usage']
+    print(f"Prompt tokens: {usage['prompt_tokens']}")
+    print(f"Completion tokens: {usage['completion_tokens']}")
+    print(f"Total tokens: {usage['total_tokens']}")
+
+also tiktoken :
+    import tiktoken    
+    # Create an encoder for a specific model
+    enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    # Encode text to tokens
+    text = "Hello, world!"
+    tokens = enc.encode(text)
+    # Get token count
+    token_count = len(tokens)
+    # Decode tokens back to text
+    decoded_text = enc.decode(tokens)    
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------
+Thank you for the opportunity to provide additional feedback. Here are some more thoughts and suggestions:
+
+1. Context Management:
+   Consider adding a section on context management. LLMs have token limits, so it might be helpful to provide guidelines on how to manage context across multiple nodes, especially for larger projects.
+
+2. Error Handling and Debugging:
+   Include more specific instructions on how to handle errors and debug issues within the task graph. This could include guidelines for creating error-reporting nodes or how to handle unexpected outputs from LLM nodes.
+
+3. Version Control Integration:
+   Given that this system interacts with Git repositories, it might be beneficial to include instructions on how nodes should interact with version control. For example, when and how to create commits, handle branches, etc.
+
+4. Documentation:
+   Emphasize the importance of documentation within the task graph. This could include guidelines for how detailed node descriptions should be, or how to document the relationships between nodes.
+
+5. Testing:
+   Consider adding instructions for creating test nodes or how to incorporate testing into the task graph structure.
+
+6. Scalability:
+   Provide guidance on how to structure task graphs for larger, more complex projects. This could include tips on modularization or how to manage dependencies between multiple task graphs.
+
+7. User Interaction:
+   Expand on how and when to use the TaskNode_RequestUserAssistance. Include guidelines on what kind of information should be requested from users and how to incorporate their input back into the task flow.
+
+8. Performance Considerations:
+   Add a section on performance considerations, especially for Python nodes. This could include guidelines on when to use asynchronous operations or how to optimize for speed in larger task graphs.
+
+9. Security:
+   Include guidelines on handling sensitive information within the task graph, especially when interacting with external APIs or databases.
+
+10. Extensibility:
+    Provide instructions on how to create custom node types or extend existing ones to accommodate specific project needs.
+
+These additional points could help create a more comprehensive and robust framework for task management and execution.
+
+--------------
+!!To spot existing feature when asked to implement existing feature
+Review the entire code snippet before suggesting changes.
+Carefully consider new feature, consider that feature may already exist and just needs to be altered
+If there is any confusion,summarized the existing functionality and ask for clarification
+
+
+
+=========
+
+        diff_file_contents = """--- a/App/TEST/Test.txt
++++ b/App/TEST/Test.txt
+@@ -1,3 +1,4 @@
+ (task_manager) PS C:\\GitDepots\\TaskMaster\\App> ^C
+ (task_manager) PS C:\\GitDepots\\TaskMaster\\App>
++Adding some text
+ (task_manager) PS C:\\GitDepots\\TaskMaster\\App>  c:; cd 'c:\\GitDepots\\TaskMaster\\App'; & 'c:\\Users\\mite51\\anaconda3\\envs\\task_manager\\python.exe' 'c:\\Users\\mite51\\.vscode\\extensions\\ms-python.debugpy-2024.10.0-win32-x64\\bundled\\libs\\debugpy\\adapter/../..\\debugpy\\launcher' '58280' '--' '-m' 'ProjectManager' 
+\\ No newline at end of file
+"""
+
+        #task1.LLM_interface.add_session_entry("System", "test\\\\nfile contents", entry_type=ResponseEntryType.FILE, metadata={"filename": "filename", "type": "file"})
+        #task1.LLM_interface.add_session_entry("System", diff_file_contents, entry_type=ResponseEntryType.FILE, metadata={"filename": "TEST\\Test.txt", "type": "diff"})
+        #task1.LLM_interface.add_session_entry("System", "abc123", entry_type=ResponseEntryType.FILE, metadata={"filename": "Images\\image.png", "type": "png"})
+ ============
+
+
+   You are an AI assistant designed to provide detailed, step-by-step responses. Your outputs should follow this structure:
+
+  1. Begin with a <thinking> section. Everything in this section is invisible to the user.
+  2. Inside the thinking section:
+     a. Briefly analyze the question and outline your approach.
+     b. Present a clear plan of steps to solve the problem.
+     c. Use a "Chain of Thought" reasoning process if necessary, breaking down your thought process into numbered steps.
+  3. Include a <reflection> section for each idea where you:
+     a. Review your reasoning.
+     b. Check for potential errors or oversights.
+     c. Confirm or adjust your conclusion if necessary.
+  4. Be sure to close all reflection sections.
+  5. Close the thinking section with </thinking>.
+  6. Provide your final answer in an <output> section.
+  
+  Always use these tags in your responses. Be thorough in your explanations, showing each step of your reasoning process. Aim to be precise and logical in your approach, and don't hesitate to break down complex problems into simpler components. Your tone should be analytical and slightly formal, focusing on clear communication of your thought process.
+  
+  Remember: Both <thinking> and <reflection> MUST be tags and must be closed at their conclusion
+  
+  Make sure all <tags> are on separate lines with no other text. Do not include other text on a line containing a tag.

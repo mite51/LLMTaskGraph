@@ -1,0 +1,127 @@
+{
+  "name": "Implement Tic-Tac-Toe Game",
+  "type": "TaskNode_Container",
+  "description": "Create a 2-player tic-tac-toe game using PyGame",
+  "children": [
+    {
+      "name": "Setup Project Structure",
+      "type": "TaskNode_Container",
+      "description": "Set up the basic project structure and dependencies",
+      "children": [
+        {
+          "name": "Create Project Directory",
+          "type": "TaskNode_Python",
+          "description": "Create the project directory and necessary files",
+          "python_code": "import os\n\nproject_dir = os.path.join(task_context.project.local_git_path, 'tic_tac_toe')\nos.makedirs(project_dir, exist_ok=True)\nopen(os.path.join(project_dir, 'main.py'), 'w').close()\ntask_context.variable_stack['project_dir'] = project_dir"
+        },
+        {
+          "name": "Install Dependencies",
+          "type": "TaskNode_Python",
+          "description": "Install PyGame using pip",
+          "python_code": "import subprocess\n\nsubprocess.run(['pip', 'install', 'pygame'])"
+        }
+      ]
+    },
+    {
+      "name": "Implement Game Logic",
+      "type": "TaskNode_Container",
+      "description": "Implement the core game logic for tic-tac-toe",
+      "children": [
+        {
+          "name": "Create Game Class",
+          "type": "TaskNode_LLM",
+          "description": "Implement the Game class with basic game logic",
+          "prompt": "Create a Python class called 'Game' for a tic-tac-toe game. The class should initialize a 3x3 grid, keep track of the current player, and include methods for making a move, checking for a win, and checking for a draw. Use appropriate data structures and implement the game logic efficiently.",
+          "response_variable_stack_name": "game_class_code"
+        },
+        {
+          "name": "Add Game Class to main.py",
+          "type": "TaskNode_Python",
+          "description": "Add the Game class code to main.py",
+          "python_code": "import os\n\nproject_dir = task_context.variable_stack['project_dir']\ngame_class_code = task_context.variable_stack['game_class_code']\n\nwith open(os.path.join(project_dir, 'main.py'), 'w') as f:\n    f.write(game_class_code)"
+        }
+      ]
+    },
+    {
+      "name": "Implement PyGame Interface",
+      "type": "TaskNode_Container",
+      "description": "Create the graphical interface using PyGame",
+      "children": [
+        {
+          "name": "Create PyGame Setup",
+          "type": "TaskNode_LLM",
+          "description": "Implement PyGame initialization and main game loop",
+          "prompt": "Create Python code to initialize PyGame, set up a game window of 600x600 pixels, and implement a main game loop. The loop should handle events, update the game state, and render the game board. Use the Game class we created earlier. Include a simple color scheme (e.g., black and white with colored accents) and a standard, easily readable font for text elements.",
+          "response_variable_stack_name": "pygame_setup_code"
+        },
+        {
+          "name": "Implement Board Rendering",
+          "type": "TaskNode_LLM",
+          "description": "Implement functions to render the game board and player symbols",
+          "prompt": "Create Python functions to render the tic-tac-toe game board and player symbols (X and O) using PyGame. The board should be drawn using basic shapes, and the symbols should be distinct and easy to read. Include a function to display text indicating the current player's turn.",
+          "response_variable_stack_name": "board_rendering_code"
+        },
+        {
+          "name": "Implement User Input Handling",
+          "type": "TaskNode_LLM",
+          "description": "Implement functions to handle mouse input for placing symbols",
+          "prompt": "Create a Python function to handle mouse input in the PyGame tic-tac-toe game. The function should detect mouse clicks, determine which cell of the 3x3 grid was clicked, and update the game state accordingly. Ensure that players can only place their symbol in empty cells.",
+          "response_variable_stack_name": "input_handling_code"
+        },
+        {
+          "name": "Implement Game Over and Restart",
+          "type": "TaskNode_LLM",
+          "description": "Implement game over detection and restart functionality",
+          "prompt": "Create Python functions to detect when the tic-tac-toe game is over (win or draw) and display the result. Implement a restart button that appears after the game is complete. The button should reset the game state when clicked. Include simple animations for placing symbols and when a player wins.",
+          "response_variable_stack_name": "game_over_code"
+        },
+        {
+          "name": "Combine PyGame Components",
+          "type": "TaskNode_Python",
+          "description": "Combine all PyGame components into main.py",
+          "python_code": "import os\n\nproject_dir = task_context.variable_stack['project_dir']\npygame_setup_code = task_context.variable_stack['pygame_setup_code']\nboard_rendering_code = task_context.variable_stack['board_rendering_code']\ninput_handling_code = task_context.variable_stack['input_handling_code']\ngame_over_code = task_context.variable_stack['game_over_code']\n\nwith open(os.path.join(project_dir, 'main.py'), 'a') as f:\n    f.write('\\n\\n' + pygame_setup_code)\n    f.write('\\n\\n' + board_rendering_code)\n    f.write('\\n\\n' + input_handling_code)\n    f.write('\\n\\n' + game_over_code)"
+        }
+      ]
+    },
+    {
+      "name": "Implement Error Handling",
+      "type": "TaskNode_LLM",
+      "description": "Add error handling and input validation",
+      "prompt": "Review the tic-tac-toe game code in main.py and add appropriate error handling and input validation. Ensure that the game gracefully handles invalid moves, unexpected inputs, and potential exceptions. Implement brief, informative messages for invalid moves.",
+      "response_variable_stack_name": "error_handling_code"
+    },
+    {
+      "name": "Add Error Handling to main.py",
+      "type": "TaskNode_Python",
+      "description": "Incorporate error handling code into main.py",
+      "python_code": "import os\n\nproject_dir = task_context.variable_stack['project_dir']\nerror_handling_code = task_context.variable_stack['error_handling_code']\n\nwith open(os.path.join(project_dir, 'main.py'), 'r+') as f:\n    content = f.read()\n    f.seek(0, 0)\n    f.write(error_handling_code + '\\n\\n' + content)"
+    },
+    {
+      "name": "Test Game",
+      "type": "TaskNode_LLM",
+      "description": "Create a test plan for the tic-tac-toe game",
+      "prompt": "Create a test plan for the tic-tac-toe game. Include test cases for all game functionalities, including valid moves, invalid moves, win conditions, draw conditions, and the restart functionality. Provide step-by-step instructions for manual testing.",
+      "response_variable_stack_name": "test_plan"
+    },
+    {
+      "name": "Generate Documentation",
+      "type": "TaskNode_LLM",
+      "description": "Generate user documentation for the tic-tac-toe game",
+      "prompt": "Create user documentation for the tic-tac-toe game. Include an overview of the game, instructions on how to play, explanation of the user interface elements, and any special features or considerations. Format the documentation in Markdown.",
+      "response_variable_stack_name": "user_documentation"
+    },
+    {
+      "name": "Save Documentation",
+      "type": "TaskNode_Python",
+      "description": "Save the user documentation to a file",
+      "python_code": "import os\n\nproject_dir = task_context.variable_stack['project_dir']\nuser_documentation = task_context.variable_stack['user_documentation']\n\nwith open(os.path.join(project_dir, 'README.md'), 'w') as f:\n    f.write(user_documentation)"
+    },
+    {
+      "name": "Final Review",
+      "type": "TaskNode_LLM",
+      "description": "Conduct a final review of the project",
+      "prompt": "Review the entire tic-tac-toe project, including the main.py file, README.md, and the test plan. Provide a summary of the project structure, highlight any potential improvements or optimizations, and suggest any final touches that could enhance the game or its documentation.",
+      "response_variable_stack_name": "final_review"
+    }
+  ]
+}

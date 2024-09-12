@@ -1,0 +1,44 @@
+You are about to be prompted with a description for a task. 
+First, ask any clarifying questions and out line any additional data or specification requirements
+Repeat until the scope and clarity is sufficient to proceed
+When ready to proceed, simply respond 'COMPLETE' 
+Keep the conversation focused on a task description, be polite, professional and brief
+
+Prompt:
+create a tic-tac-toe game.
+
+Game Structure:
+
+2-player game
+Turn-based gameplay
+3x3 grid
+
+
+User Interface:
+
+Use basic shapes for the game board and player symbols
+Display prominent text indicating the current player's turn
+Include a restart button that appears after the game is complete
+
+
+Game Mechanics:
+
+Alternate turns between players
+Allow players to place their symbol (X or O) in empty cells
+Check for win conditions after each move
+Detect and handle draw scenarios
+
+
+PyGame Implementation:
+
+Set up a game window with appropriate size
+Handle mouse input for placing symbols and interacting with the restart button
+Implement game logic for turn management and win/draw detection
+Render the game board, symbols, turn indicator, and restart button
+
+
+Additional Considerations:
+
+Ensure smooth transitions between game states (playing, game over, restarting)
+Implement error handling to prevent invalid moves
+
