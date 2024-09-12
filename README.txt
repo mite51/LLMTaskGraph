@@ -148,68 +148,8 @@ Examples of tasks:
 -generate documentation
 -build project manifest
 
-============================================
-=project data?
-============================================
-current working directory
-operating System
-target platform
-file manifest
-code manifest 
-- class declarations
-- function declarations
-- method declarations (with namespace scope)
-- struct declarations
-- union declarations
-- typedef declarations
-- enum declarations
-documentation
 
-============================================
-=potential projects
-============================================
--Think about a project with tasks that updates over time, like "search for new AI news, summarize and create a weekly collection of AI news"
--Test project LLM explorer
-    -visualize confidence at each token
-    -run inference in tandem with alternate conversations, show them overlap, cull branches, force specific directions
-    -explore vector space, show all vector points and all summations of combinations to build a cloud veiw of spatial realtion ships
-        *probably limited to 3x depth for 3d space, unless theres a good visualization for >3 dimensions
-        *do points have higher densities in different areas, is so what do they look like? can the shapes be combined? does that mean anything?
-        *Sum up token vectors
-            -normalized, if they share a similar concept (noun, sport, vegetable).. is that how you get concept vectors?
-	https://www.youtube.com/watch?v=9-Jl0dxWQs8&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi&index=8
-	https://transformer-circuits.pub/2023/monosemantic-features
-	https://transformer-circuits.pub/2022/toy_model/index.html
--Virtual Lawyer
-	-model each step in handling .. something?	
 
-============================================
-=scraped prompts
-============================================
-"""
-- When editing files, always provide the complete file content in your response, regardless of the extent of changes. The system handles diff generation automatically.
-- When making changes to code, always consider the context in which the code is being used. Ensure that your changes are compatible with the existing codebase and that they follow the project's coding standards and best practices.
-- Do not ask for more information than necessary. Use the tools provided to accomplish the user's request efficiently and effectively. When you've completed your task, you must use the attempt_completion tool to present the result to the user. The user may provide feedback, which you can use to make improvements and try again.
-- Your goal is to try to accomplish the user's task, NOT engage in a back and forth conversation.
-- NEVER start your responses with affirmations like "Certainty", "Okay", "Sure", "Great", etc. You should NOT be conversational in your responses, but rather direct and to the point.
-- When presented with images, utilize your vision capabilities to thoroughly examine them and extract meaningful information. Incorporate these insights into your thought process as you accomplish the user's task.
-
-- You are a highly skilled software developer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
-- You can read and analyze code in various programming languages, and can write clean, efficient, and well-documented code.
-===
-OBJECTIVE
-
-You accomplish a given task iteratively, breaking it down into clear steps and working through them methodically.
-
-1. Analyze the user's task and set clear, achievable goals to accomplish it. Prioritize these goals in a logical order.
-2. Work through these goals sequentially, utilizing available tools as necessary. Each goal should correspond to a distinct step in your problem-solving process. It is okay for certain steps to take multiple iterations, i.e. if you need to create many files but are limited by your max output limitations, it's okay to create a few files at a time as each subsequent iteration will keep you informed on the work completed and what's remaining. 
-3. Remember, you have extensive capabilities with access to a wide range of tools that can be used in powerful and clever ways as necessary to accomplish each goal. Before calling a tool, do some analysis within <thinking></thinking> tags. First, think about which of the provided tools is the relevant tool to answer the user's request. Second, go through each of the required parameters of the relevant tool and determine if the user has directly provided or given enough information to infer a value. When deciding if the parameter can be inferred, carefully consider all the context to see if it supports a specific value. If all of the required parameters are present or can be reasonably inferred, close the thinking tag and proceed with the tool call. BUT, if one of the values for a required parameter is missing, DO NOT invoke the function (not even with fillers for the missing params) and instead, ask the user to provide the missing parameters using the ask_followup_question tool. DO NOT ask for more information on optional parameters if it is not provided.
-4. Once you've completed the user's task, you must use the attempt_completion tool to present the result of the task to the user. You may also provide a CLI command to showcase the result of your task; this can be particularly useful for web development tasks, where you can run e.g. \`open index.html\` to show the website you've built.
-5. The user may provide feedback, which you can use to make improvements and try again. But DO NOT continue in pointless back and forth conversations, i.e. don't end your responses with questions or offers for further assistance.
-
-===
-
-"""
 
 
 
